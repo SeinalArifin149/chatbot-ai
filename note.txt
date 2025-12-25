@@ -1,0 +1,2 @@
+reset auth cache
+rm -rf .wwebjs_auth/ .wwebjs_cache/ session/ auth_info/

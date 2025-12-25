@@ -1,23 +1,46 @@
-const { Client } = require('whatsapp-web.js');
+const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
-const { ping } = require ("./chat.js");
+// Pastikan file chat.js ada di folder yang sama
+const { ping } = require("./chat.js"); 
 
-// Create a new client instance
-const client = new Client();
+// === BAGIAN INI YANG SAYA PERBAIKI ===
+const client = new Client({
+    // 1. Auth Strategy (Perhatikan huruf besar kecilnya & pakai new)
+    authStrategy: new LocalAuth(),
 
-// When the client is ready, run this code (only once)
+    // 2. Settingan Mesin (Puppeteer)
+    // Karena abang mau pakai di Termux/VPS, ini WAJIB ada.
+    // Kalau di laptop Windows biasa, args ini aman kok dibiarin aja.
+    puppeteer: {
+        headless: true, // Wajib true kalau di server tanpa layar
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote', 
+            '--disable-gpu'
+        ],
+    }
+});
+// ======================================
+
 client.once('ready', () => {
     console.log('Client is ready!');
-    ping();
+    // Oper client ke fungsi ping biar dia bisa merespon
+    ping(client);
 });
 
-// When the client received QR-Code
-// client.on('qr', (qr) => {
-//     console.log('QR RECEIVED', qr);
-// });
-client.on('qr',qr => {
-    qrcode.generate(qr, {small:true})
+client.on('qr', qr => {
+    // Tampilkan QR kecil
+    qrcode.generate(qr, { small: true });
+    
+    // Tampilkan Kode Mentah (buat jaga-jaga kalau QR terminal pecah)
+    console.log('\n================================================');
+    console.log('COPY KODE DI BAWAH INI (JIKA QR DI ATAS TIDAK BISA DISCAN):');
+    console.log(qr); 
+    console.log('================================================\n');
 });
 
-// Start your client
 client.initialize();
